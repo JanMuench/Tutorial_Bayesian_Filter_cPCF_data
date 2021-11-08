@@ -1,4 +1,3 @@
-
 // In order to change the model you have to change the:
 // 1.define the observation model function
 // 2.multiplyligand
@@ -211,9 +210,7 @@ matrix precision_clamp_flurescences(matrix observ_model, matrix corre_mat, matri
 {
        matrix[2,2] result;
 
-
        result = ObservNoise_covariance + (observ_model * corre_mat) * observ_model';
-
 
        if(fabs(determinant(result)) < 0.0000001){
 
@@ -263,29 +260,6 @@ matrix  define_observation_model_CCO_CO(int M_states,
                [0,0,0, i_single_channel,i_single_channel]];
         return obs;
         }
-
-matrix  define_observation_model_CCCFFO(int M_states,
-                                real i_single_channel,
-                                real lambda_fluoresc){
-        matrix[2,M_states] obs;
-        row_vector[M_states] fluo = lambda_fluoresc  * i_single_channel * to_row_vector([0, 0.5, 1, 1, 0.5,1]);
-        obs = [fluo,
-               [0,0,0,0,0,i_single_channel]];
-        return obs;
-        }
-
-
-matrix  define_observation_model_CCC_CO(int M_states,
-                                real i_single_channel,
-                                real lambda_fluoresc){
-        matrix[2,M_states] obs;
-        row_vector[M_states] fluo = lambda_fluoresc  * i_single_channel * to_row_vector([0, 0.5, 1, 1, 0.5]);
-        obs = [fluo,
-               [0,0,0, i_single_channel,0]];
-        return obs;
-        }
-
-
 
 
 matrix  define_observation_model_CCCO(int M_states,
@@ -359,7 +333,6 @@ matrix assign_param_to_rate_matrix_CCOC(vector theta,
         return rates_mat;
     }
 
-
 matrix assign_param_to_rate_matrix_CCOCO(vector theta,
                                    int M_states)
     {
@@ -388,23 +361,6 @@ matrix assign_param_to_rate_matrix_CCO_CO(vector theta,
 
         return rates_mat;
     }
-
-matrix assign_param_to_rate_matrix_CCCFFO(vector theta,
-                                   int M_states)
-    {
-        matrix[M_states, M_states] rates_mat;
-        rates_mat    = [[      0 , theta[1],        0,         0,             0,             0],
-                       	[theta[2],        0, theta[3],         0,      theta[7],             0],
-                        [       0, theta[4],        0,  theta[5],             0,             0],
-                       	[	0,        0,  theta[6],        0,      theta[9], theta[11]],
-                       	[	0, theta[8],        0, theta[10],             0,         0],
-                        [               0,                0,            0, theta[12],                 0,                 0]];
-
-
-
-        return rates_mat;
-    }
-
 
 
     vector multiply_ligandconc_CCO(real[] theta_array,
@@ -485,7 +441,6 @@ vector multiply_ligandconc_CCOCO(real[] theta_array,
     }
 
 
-/*
 vector multiply_ligandconc_CCO_CO(real[] theta_array,
                            real[] equili,
                            int N_free_para,
@@ -494,101 +449,29 @@ vector multiply_ligandconc_CCO_CO(real[] theta_array,
 
         vector[N_free_para] theta;
         //print("ratio: ", theta_array[6]);
-
-        theta[1] = theta_array[1]/3.5;
-        theta[2] = theta_array[1]/3.5*4.0*equili[1];
-
+        theta[1] = 0.6*theta_array[1];
+        theta[2] = 0.6*theta_array[1]*24.0*equili[1];
         theta[3] = theta_array[2];
-        theta[4] = theta_array[2] * equili[2]; //3/5 * 2
 
-        theta[5] = theta_array[3]/50;
-        theta[6] = theta_array[3]/50 * 10 * equili[3];  //8/2*2
-
-        theta[7] = theta_array[4]/5;
-        theta[8] = theta_array[4]/5* 2 * equili[4]; //theta_array[4] * 0.2 * equili[4];  //8/2*2
-
-        theta[9] = theta_array[5]/3.5;
-        theta[10] = theta_array[5]/3.5 *48/60 * equili[5];  //8/2*2
-
-        //Micro reversibilty appiled here by Beta Bistribution around the strictly enforced Micro reversibilty
-        //theta[8] = theta[4]*theta[6]*theta[10]*theta[7]/(0.01+theta[9]*theta[5]*theta[3]);
-        //theta[8] = theta[8]*(0.995 + 0.001 * equili[4]);
-
-        return theta .* ligand_conc;
-    }
-
-*/
-
-vector multiply_ligandconc_CCO_CO(real[] theta_array,
-                           real[] equili,
-                           int N_free_para,
-                           vector ligand_conc)
-    {
-
-        vector[N_free_para] theta;
-        //print("ratio: ", theta_array[6]);
-
-        theta[1] = theta_array[1]/3.5;
-        theta[2] = theta_array[1]/3.5*4.0*equili[1];
-
-        theta[3] = (1+theta_array[2])/2;
-        theta[4] = (1+theta_array[2])/2 * equili[2]; //3/5 * 2
-
-        theta[5] = (25+theta_array[3])/50;
-        theta[6] = (25+theta_array[3])/50 * 10 * equili[3];  //8/2*2
-
-        theta[7] = theta_array[4]/5;
-        //theta[8] = theta_array[4]/5* 2 * equili[4]; //theta_array[4] * 0.2 * equili[4];  //8/2*2
-
-        theta[9] = (1+theta_array[5])/3.5;
-        theta[10] =(1+theta_array[5])/3.5 *48/60 * equili[5];  //8/2*2
+        theta[4] = theta_array[2]* 6.0/5.0 * equili[2]; //3/5 * 2
 
 
+        theta[5] = 0.03*theta_array[3];
+        theta[6] = 0.03*theta_array[3] * 100 * equili[3];  //8/2*2
 
-        theta[8] = theta[4]*theta[6]*theta[10]*theta[7]/(theta[9]*theta[5]*theta[3]);
-        theta[8] = theta[8]*(0.995 + 0.01 * equili[4]);
+        theta[7] = theta_array[4];
+        theta[8] = 0.1*equili[4]; //theta_array[4] * 0.2 * equili[4];  //8/2*2
 
+        theta[9] = theta_array[5];
 
+        //theta[10] = exp(log(theta[3])+log(theta[5])+log(theta[8])+log(theta[9])-log(theta[4])-log(theta[6])-log(theta[7]));
+        theta[10] = 1* equili[5];  //8/2*2
 
         return theta .* ligand_conc;
     }
 
 
-vector multiply_ligandconc_CCCFFO(real[] theta_array,
-                           real[] equili,
-                           int N_free_para,
-                           vector ligand_conc)
-    {
 
-        vector[N_free_para] theta;
-        //print("ratio: ", theta_array[6]);
-
-        theta[1] = theta_array[1]/3.5;
-        theta[2] = theta_array[1]/3.5*4.0*equili[1];
-
-        theta[3] = (1+theta_array[2])/2;
-        theta[4] = (1+theta_array[2])/2 * equili[2]; //3/5 * 2
-
-        theta[5] = (25+theta_array[3])/50;
-        theta[6] = (25+theta_array[3])/50 * 10 * equili[3];  //8/2*2
-
-       	theta[7] = theta_array[4]/5;
-        //theta[8] = theta_array[4]/5* 2 * equili[4]; //theta_array[4] * 0.2 * equili[4];  //8/2*2
-
-        theta[9] = (1+theta_array[5])/3.5;
-        theta[10] =(1+theta_array[5])/3.5 *48/60 * equili[5];  //8/2*2
-
-        theta[11] = (1+theta_array[6])/3.5;
-        theta[12] =(1+theta_array[6])/3.5 *40 * equili[6];  //8/2*2
-
-
-        theta[8] = theta[4]*theta[6]*theta[10]*theta[7]/(theta[9]*theta[5]*theta[3]);
-        theta[8] = theta[8]*(0.995 + 0.01 * equili[4]);
-
-
-
-        return theta .* ligand_conc;
-    }
 
 
 matrix assign_param_to_rate_matrix(vector theta,
@@ -659,12 +542,12 @@ matrix create_rate_matrix(real[] theta_array,
                         real numeric_precision){
 
         matrix[M_states,M_states] rates;
-        vector[N_free_para] theta_vec = multiply_ligandconc_CCCFFO(theta_array,
+        vector[N_free_para] theta_vec = multiply_ligandconc_CCCO(theta_array,
                            ratios,
                            N_free_para,
                            ligand_conc);
 
-        rates = assign_param_to_rate_matrix_CCCFFO(theta_vec, M_states);
+        rates = assign_param_to_rate_matrix_CCCO(theta_vec, M_states);
         rates  = assign_diagonal_elements(rates,M_states,
                                     numeric_precision);
 
@@ -730,65 +613,6 @@ matrix calculate_starting_correlation(int M_states, vector Starting_values, real
         return starting_correlation;
     }
 
-
-
-
-real[,,] filter_equi_time_dist_over_time_trace(int N_data,vector mu_first, real numeric_precision, real N_ion,
-                                        matrix observation_model, real var_open, real i_single_channel,
-                                        matrix first_corre_mat, int M_states, vector[]  y_start, matrix transition_mat, matrix observ_covariance){
-    real calc_container[2,3, N_data];
-    matrix[2,2]         TimeDependet_obersCov;
-    matrix[2,2]               precision;
-    matrix[M_states, 2]   kalmann_gain;
-    matrix[M_states,M_states] corre_mat = first_corre_mat;
-    vector[M_states] mu = mu_first;
-    vector[M_states]             mu_old;
-    for(n_data in 1: N_data){
-
-        if(fabs(sum(mu)-1) > numeric_precision){
-                print("n_data: ", n_data);
-                print("sum mu: ",fabs(sum(mu)-1));
-        }
-
-
-       calc_container[:,1,n_data] = to_array_1d(calc_measurement_mean(N_ion,
-                                                              observation_model, mu));
-
-
-       //newww for poissin
-       TimeDependet_obersCov =[[calc_container[1,1,n_data],                          0],
-                               [0,              var_open/i_single_channel * calc_container[2,1,n_data]]];
-
-
-       precision = precision_clamp_flurescences(observation_model, corre_mat, observ_covariance+ TimeDependet_obersCov);
-
-       calc_container[:,2:3,n_data] = to_array_2d(precision);
-
-
-
-       kalmann_gain = calc_kalmann_gain(N_ion, M_states, observation_model,
-                                       corre_mat,  inverse(precision));
-
-       mu = update_mu_due_measurement(M_states, kalmann_gain, mu,
-                                            y_start[n_data],
-                                            to_vector(calc_container[:,1,n_data]), N_ion);
-
-       mu_old = mu;
-       mu = propagate_mu_in_time(M_states, mu_old, transition_mat);
-       ///new for Poisson counting noise
-
-       corre_mat = update_correlation_matrix(M_states, N_ion, precision, corre_mat,
-                                               transition_mat, mu, mu_old, kalmann_gain);
-
-
-
-      }
-
-     return calc_container;
-     }
-
-
-
 real[,,] calculate_likelihood_for_each_trace(int N_free_para,
                                             real i_single_channel,
                                              int N_data,
@@ -836,8 +660,7 @@ real[,,] calculate_likelihood_for_each_trace(int N_free_para,
 
 
 
-
-    matrix[2,M_states] observation_model = define_observation_model_CCCFFO(M_states, i_single_channel, lambda_fluoresc);
+    matrix[2,M_states] observation_model = define_observation_model_CCCO(M_states, i_single_channel, lambda_fluoresc);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -895,57 +718,53 @@ real[,,] calculate_likelihood_for_each_trace(int N_free_para,
 
     mu = propagate_mu_in_time(M_states, mu_old, transition_mat);
 
+
+
+
     corre_mat = update_correlation_matrix(M_states, N_ion,precision,
                                           corre_mat, transition_mat, mu, mu_old, kalmann_gain);
 
     transition_mat = matrix_exp(rate_matrix * dif_time);
 
-    calculation_container[:,:,2:] = filter_equi_time_dist_over_time_trace(N_data,mu, numeric_precision, N_ion,
-                                        observation_model, var_open, i_single_channel,
-                                        corre_mat, M_states, y_start, transition_mat,observ_covariance);
+    for(n_data in 1: N_data){
+        if(fabs(sum(mu)-1) > numeric_precision){
+                print("n_data: ", n_data);
+                print("sum mu: ",fabs(sum(mu)-1));
+        }
+
+
+       calculation_container[:,1,n_data+1] = to_array_1d(calc_measurement_mean(N_ion,
+                                                              observation_model, mu));
+
+
+       //newww for poissin
+       TimeDependet_obersCov =[[calculation_container[1,1,n_data+1],                          0],
+                               [0,              var_open/i_single_channel * calculation_container[2,1,n_data+1]]];
+
+       precision = precision_clamp_flurescences(observation_model, corre_mat, observ_covariance+ TimeDependet_obersCov);
+
+       calculation_container[:,2:3,n_data+1] = to_array_2d(precision);
+
+       kalmann_gain = calc_kalmann_gain(N_ion, M_states, observation_model,
+                                       corre_mat,  inverse(precision));
+
+       mu = update_mu_due_measurement(M_states, kalmann_gain, mu,
+                                            y_start[n_data],
+                                            to_vector(calculation_container[:,1,n_data+1]), N_ion);
+
+       mu_old = mu;
+       mu = propagate_mu_in_time(M_states, mu_old, transition_mat);
+       ///new for Poisson counting noise
+
+       corre_mat = update_correlation_matrix(M_states, N_ion, precision, corre_mat,
+                                               transition_mat, mu, mu_old, kalmann_gain);
+      }
+
+
+
 
     return calculation_container;
 }
-
-
-real calc_Log_probabilty_data(vector[] y_start,int N_data, vector y_equi,real[,,] result){
-        real SumLogLike[N_data+1];
-        vector[2] mean_signal;
-        matrix[2,2] output_covari;
-
-        mean_signal = to_vector(result[:,1,1]);
-        output_covari = to_matrix(result[:,2:3,1]);
-        SumLogLike[1] = multi_normal_lpdf(y_equi|mean_signal,output_covari);
-
-        for(n_data in 1: N_data)
-             {
-             mean_signal = to_vector(result[:,1, n_data+1]);
-             output_covari = to_matrix(result[:,2:3,n_data+1]);
-             SumLogLike[n_data+1] = multi_normal_lpdf(y_start[n_data]|mean_signal, output_covari);
-             }
-       return sum(SumLogLike);
-       }
-
-
-vector  construct_flattend_result(real[,,] result, real LogLikeTrace, int N_data){
-        int current = 1;
-        vector[2*3*(N_data+1)+1] flattend_result;
-        for (i in 1: 2)
-        {
-            for (j in 1: 3)
-            {
-                for (k in 1: N_data+1)
-                {
-                flattend_result[current] = result[i,j,k];
-                current +=1;
-                }
-            }
-       }
-
-      flattend_result[current] = LogLikeTrace;
-      return flattend_result;
-      }
-
 
 
 vector wrapped_calculate_likelyhood(vector params, vector ingnoreMe, real[] x_r, int[] x_i)
@@ -976,7 +795,7 @@ vector wrapped_calculate_likelyhood(vector params, vector ingnoreMe, real[] x_r,
        real lambda_fluoresc;
        real time_offset_off_ligand_wash;
        real result[2,3,N_data+1];
-
+       real SumLogLike[N_data+1];
        real LogLikeTrace;
        vector[2*3*(N_data+1)+1] flattend_result;
 
@@ -1070,11 +889,39 @@ vector wrapped_calculate_likelyhood(vector params, vector ingnoreMe, real[] x_r,
                                                     lambda_fluoresc, time_offset_off_ligand_wash,
                                                     True_or_False);
        }
+       //calc loglikelihood
+        SumLogLike[1] = multi_normal_lpdf(y_equi|to_vector(result[:,1,1]),
+                                                      to_matrix(result[:,2:3,1]));
+        {
+        for(n_data in 1: N_data)
+             {
+
+             vector[2] mean_signal;
+             matrix[2,2] output_covari;
+             mean_signal = to_vector(result[:,1, n_data+1]);
+             output_covari = to_matrix(result[:,2:3,n_data+1]);
+             SumLogLike[n_data+1] = multi_normal_lpdf(y_start[n_data]|mean_signal, output_covari);
+
+             }
+
+        LogLikeTrace = sum(SumLogLike);
+        }
 
 
+      current = 1;
+      for (i in 1: 2)
+      {
+        for (j in 1: 3)
+        {
+          for (k in 1: N_data+1)
+          {
+            flattend_result[current] = result[i,j,k];
+            current +=1;
+          }
+        }
+      }
 
-      LogLikeTrace = calc_Log_probabilty_data(y_start, N_data, y_equi, result);
-      flattend_result= construct_flattend_result(result, LogLikeTrace, N_data);
+      flattend_result[current] = LogLikeTrace;
       return flattend_result;
 }
 
@@ -1108,7 +955,7 @@ vector wrapped_calculate_likelyhood_less_memo(vector params, vector ingnoreMe, r
        real lambda_fluoresc;
        real time_offset_off_ligand_wash;
        real result[2,3,N_data+1];
-       //real SumLogLike[N_data+1];
+       real SumLogLike[N_data+1];
        vector[1] LogLikeTrace;
        //vector[2*3*(N_data+1)+1] flattend_result;
 
@@ -1202,7 +1049,22 @@ vector wrapped_calculate_likelyhood_less_memo(vector params, vector ingnoreMe, r
                                                     lambda_fluoresc, time_offset_off_ligand_wash,
                                                     True_or_False);
        }
-      LogLikeTrace[1] = calc_Log_probabilty_data(y_start, N_data, y_equi, result);
+       //calc loglikelihood
+        SumLogLike[1] = multi_normal_lpdf(y_equi|to_vector(result[:,1,1]),
+                                                      to_matrix(result[:,2:3,1]));
+        {
+        //vector[N_data] test;
+        for(n_data in 1: N_data)
+             {
+
+             vector[2] mean_signal;
+             matrix[2,2] output_covari;
+             mean_signal = to_vector(result[:,1, n_data+1]);
+             output_covari = to_matrix(result[:,2:3,n_data+1]);
+             SumLogLike[n_data+1] = multi_normal_lpdf(y_start[n_data]|mean_signal, output_covari);
+             }
+        LogLikeTrace[1] = sum(SumLogLike);
+        }
 
       return LogLikeTrace;
 }
@@ -1217,12 +1079,12 @@ data {
     real<lower = 0, upper = 101>                                    var_fluores_hat;
 
     /*The Data...........................................*/
-    vector<lower = -3000, upper = 100*N_ion_ch+6000>[2]              y_start[N_conc, N_data[1]];
-    vector<lower = -3000,
-     upper = N_ion_ch+6000>[2]                                  y_equi_before_jump[N_conc];
+    vector<lower = -1200, upper = 100*N_ion_ch+4000>[2]              y_start[N_conc, N_data[1]];
+    vector<lower = -1200,
+     upper = N_ion_ch+4000>[2]                                  y_equi_before_jump[N_conc];
     real<lower = 0.00001, upper = 0.2>                          dif_time[N_conc];
-    vector<lower = -3000, upper = 100*N_ion_ch+6000>[2]                y_dec[N_conc,N_data[2]];
-    vector<lower = -3000, upper = 100*N_ion_ch+3000>[2]                 y_equi_after_jump[N_conc];
+    vector<lower = -1200, upper = 100*N_ion_ch+4000>[2]                y_dec[N_conc,N_data[2]];
+    vector<lower = -1000, upper = 100*N_ion_ch+2000>[2]                 y_equi_after_jump[N_conc];
     real<lower = 0.00001, upper = 0.4>                  dif_time_dec[N_conc];
     real<lower = 0.0, upper = 0.005>                    time_off_set_dec[N_conc];
     real<lower = 0.0000, upper = 1>                     off_set_time_arr[N_conc];
@@ -1230,17 +1092,14 @@ data {
 
 
     /*cross_validierung...........................................*/
-    vector<lower = -2000, upper = 100*N_ion_ch+4000>[2]              y_start_hold[N_conc, N_data[1]];
-    vector<lower = -2000,upper = 100*N_ion_ch+4000>[2]               y_equi_before_jump_hold[N_conc];
-    vector<lower = -2000, upper = 100*N_ion_ch+4000>[2]                 y_dec_hold[N_conc,N_data[2]];
-    vector<lower = -2000, upper = 100*N_ion_ch+4000>[2]               y_equi_after_jump_hold[N_conc];
+    vector<lower = -1400, upper = 100*N_ion_ch+4000>[2]              y_start_hold[N_conc, N_data[1]];
+    vector<lower = -1400,upper = 100*N_ion_ch+4000>[2]               y_equi_before_jump_hold[N_conc];
+    vector<lower = -1500, upper = 100*N_ion_ch+4000>[2]                 y_dec_hold[N_conc,N_data[2]];
+    vector<lower = -1400, upper = 100*N_ion_ch+4000>[2]               y_equi_after_jump_hold[N_conc];
     //vector<lower = -100 ,upper = 100>[10]                                           y_ExpVariance[10];
 
 
-
     /*Pior information...................................*/
-    //real<lower = 0>                                                              baseline_variance;
-    //real<lower = 0>                                                     baseline_variance_variance;
     /*Model declaration..................................*/
     int<lower = 2>                                                  M_states;
     //special to simpliest connected models...............
@@ -1250,11 +1109,10 @@ data {
 
 }
 
-
 transformed data{
     real numeric_precision = 10^-7;
     int  Upper_space_lim = 10000;           #2000
-    real lower_lim = 1;
+    real lower_lim = 4;
 
     //print("off_set_time_arr = ", off_set_time_arr);
 
@@ -1262,30 +1120,9 @@ transformed data{
    int resultFlattSize = max(N_data[1],N_data[2])*2+6+3*N_free_para;
    real trans_real[4 * N_conc, resultFlattSize];
    int trans_int[4 * N_conc, 6];
-  if(N_ion_ch >=50000){
-      Upper_space_lim = 8000;
-
+      if(N_ion_ch >=1000){
+      Upper_space_lim = 6000;
    }
-
-   if(N_ion_ch >=40000){
-      Upper_space_lim = 7500;
-      lower_lim = 10;
-   }
-
-
-
-   if(N_ion_ch >=60000){
-      Upper_space_lim = 5000;
-        lower_lim = 25;
-   }
-
-   if(N_ion_ch >=110000){
-      Upper_space_lim = 4000;
-   }
-
-
-
-/*
    if(N_ion_ch >=1000){
      lower_lim = 10;
    }
@@ -1302,21 +1139,8 @@ transformed data{
    }
    if(N_ion_ch >=15000){
      lower_lim = 100;
-   }*/
-   /*   if(N_ion_ch >=40000){
-      Upper_space_lim = 7500;
    }
 
-
-   if(N_ion_ch >=60000){
-      Upper_space_lim = 5000;
-   }
-
-   if(N_ion_ch >=110000){
-      Upper_space_lim = 4000;
-      lower_lim = 100;
-   }
-    */
     for(id in 1 : N_conc)
     {
      trans_real[id,:]= flattenData(y_start[id],
@@ -1433,17 +1257,15 @@ parameters {// N_free_param+ N_conc/2 +4
             real<lower = lower_lim, upper = Upper_space_lim>                       rates[N_free_para/2];
             real<lower = 0.0, upper = 1>                                               ratio[N_free_para/2];
             real<lower = N_ion_ch-N_ion_ch*0.2, upper = N_ion_ch+N_ion_ch*0.2>         N_ion_trace[N_conc/2];
-            real<lower = 0.5, upper = 2>                                               i_single_channel;    //single channel current
-            real<lower = 0.7, upper = 1.3>                                           var_exp;        //sigma_squaered
-            //real<lower = 90, upper = 110>                                              var_exp;
-            //real<lower = baseline_variance - 4 * baseline_variance_variance, upper = baseline_variance + 4 * baseline_variance_variance>  var_exp;        //sigma_squaered
-            real<lower = 0.0001, upper = 0.5>                                               OpenVar;       //var open channel noise
-            real<lower = 100,upper =500>                                             var_fluoresc; //6000 before // 30000>
-            real<lower = 3, upper = 15>                                            lambda_fluoresc;
+            real<lower = 0.1, upper = 2>                                               i_single_channel;    //single channel current
+            real<lower = 0.00001, upper = 1>                                           var_exp;        //sigma_squaered
+            real<lower = 0.0, upper = 1>                                               OpenVar;       //var open channel noise
+            real<lower = 0.00001,upper =1>                                             var_fluoresc; //6000 before // 30000>
+            real<lower = 0.2, upper = 20>                                            lambda_fluoresc;
+
+
 }
-
 transformed parameters {
-
 
     /*2 different data types and covaricance of these makes a 2*3 container for each of the N_data timesteps*/
     //real               param_likelihood_start[N_conc,  2,3, N_data[1]+1];
@@ -1555,20 +1377,18 @@ transformed parameters {
 
 
 model{
-
-    rates[1]    ~ uniform(lower_lim,Upper_space_lim);//normal(600, 10)T[low_space_lim,Upper_space_lim];//
-    rates[2]    ~ uniform(lower_lim,Upper_space_lim);//normal(2399,239.9);// uniform(lower_lim,Upper_space_lim);//normal(1200,100)T[low_space_lim,Upper_space_lim];//
-    rates[3]    ~ uniform(lower_lim,Upper_space_lim);//normal(500,10)T[low_space_lim,Upper_space_lim];//
-    //rates[4]    ~ uniform(lower_lim,Upper_space_lim);//normal(500,50)  T[low_space_lim,Upper_space_lim];//exponential(0.001)T[0,Upper_space_lim];
-    //rates[5]    ~ uniform(lower_lim,Upper_space_lim);//normal(600,24)T[low_space_lim,Upper_space_lim];//exponential(0.001)T[0,Upper_space_lim];
+        rates[1]    ~ uniform(lower_lim,Upper_space_lim); //// normal(100, 100);
+    rates[2]    ~ uniform(lower_lim,Upper_space_lim); //normal(500,500);//
+    rates[3]    ~ uniform(lower_lim,Upper_space_lim); //normal(10,10);//
+    //rates[4]    ~ normal(0.0,0.1)T[0,Upper_space_lim];//exponential(0.001)T[0,Upper_space_lim];//;//uniform(0.01,Upper_space_lim);// //exponential(0.001);//normal(0.0,1000)T[0,Upper_space_lim];
+    //rates[5]    ~ normal(0.0,0.1)T[0,Upper_space_lim];//exponential(0.001)T[0,Upper_space_lim];
 
     ratio[1]    ~ beta(1.00001, 1.00001);    //1.001
     ratio[2]    ~ beta(1.00001, 1.00001);
     ratio[3]    ~ beta(1.00001, 1.00001);
-    //ratio[4]    ~ beta(1.00001, 1.00001);
+    //ratio[4]    ~ beta(0.9, 1.1);
     //time reversibilty auxillary
-    ratio[5]    ~ beta(1.00001, 1.00001);
-    ratio[4]    ~ beta(1000.001, 1000.001);
+    //ratio[5]    ~ beta(0.9, 1.1);
 
 
     //N_ion_trace[1] ~ normal(10000,0.01);
@@ -1577,16 +1397,13 @@ model{
     //N_ion_trace[4] ~ normal(10000,0.01);
     //N_ion_trace[5] ~ normal(10000,0.01);
 
-    var_exp             ~ normal(1.0, 0.01)T[0.7, 1.3];
-    //var_exp             ~ normal(100, 1)T[90, 110];
-    //var_exp             ~ normal(baseline_variance, baseline_variance_variance)T[baseline_variance - 4 * baseline_variance_variance, baseline_variance + 4 * baseline_variance_variance];
-    //for(i in 1 :10){
+    var_exp ~ normal(0.25, 0.0025)T[0.00001,15];
+    //for(i in 1 :10)
     //    y_ExpVariance[i]       ~ normal(0,var_exp);
     //}
-    var_fluoresc      ~ normal(300,300)T[100,500];
-    OpenVar           ~   gamma(1,100)T[0.0001, 0.5];//var_fluoresc      ~ normal(0.003,0.0001)T[0,];
-    //OpenVar           ~ normal(0.01,0.0001)T[0.0,2.5];
-    //lambda_fluoresc   ~ normal(0.75, 0.00000075)T[0.001,10];
+    //var_fluoresc      ~ normal(0.003,0.0001)T[0,];
+    OpenVar             ~ normal(0.0025,0.000025)T[0.0,2.5];
+    //lambda_fluoresc   ~ normal(0.75, 0.00000075)T[0.00001,10];
     i_single_channel    ~ normal(1,0.01)T[0.5,1.5];
 
     target += sum(SummandsLogLikTraces[:2*N_conc]);
