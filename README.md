@@ -12,7 +12,7 @@ Step by step:
 “python3  compile_CCCCO_normal_split.py” into the command line one the computer cluster where the programm is going to be excuted.
 That compiles the Stan code “KF.txt” into an executable program “KF_CCCO.pic”.
 	 
-3. Prompting “python3 sample_PC_data.py 2000” executes a Python program which acts 
+3. Prompting “python3 sample_cPCF_KF.py 2000” executes a Python program which acts 
 as an interface between the data from “data/current8000.npy” and 	    
 sampling algorithm “KF_CCCO.pic”. In the folder, data are 4 numpy arrays. The numpy 
 array “current8000.npy” has the data of 10 different ligand concentrations with two
