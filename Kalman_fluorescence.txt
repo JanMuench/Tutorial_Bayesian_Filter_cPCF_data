@@ -1076,7 +1076,7 @@ data {
     int<lower = 10, upper = 4000000>    N_ion_ch;                // how many channels
 
     /*The patch..........................................*/
-    real<lower = 0, upper = 101>                                    var_fluores_hat;
+
 
     /*The Data...........................................*/
     vector<lower = -1200, upper = 100*N_ion_ch+4000>[2]              y_start[N_conc, N_data[1]];
