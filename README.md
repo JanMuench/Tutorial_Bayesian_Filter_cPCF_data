@@ -4,39 +4,40 @@
 
 This tutorial is an example code for confocal patch-clamp fluorometry measurements which is part of the publication “Bayesian inference of kinetic schemes for ion channels by Kalman filtering”. The work was done in Stan https://mc-stan.org/ with the PyStan https://pystan.readthedocs.io/en/latest/ interface version 2.19.1.2 which is currently outdated. We plan to update the tutorial folder to PyStan 3 in the near future. The code is parallelized for the multiple CPUs of a node on a computation cluster. Each individual sampling chain is trivially calculated in parallel provided by the Stan language.
 
-The package contains a file containing the STAN code [“Kalman_fluorescence.txt”](Kalman_fluorescence.txt) as well as the python script [“compile_CCCCO_normal_split.py”](compile_CCCCO_normal_split.py) to compile the code. Finally, a Python script [“sample_PC_data.py”](sample_cPCF_KF.py) which acts as the interface between the data and the sampler. To adapt the code to your data, basic Stan programming skills are required. The Python knowledge and the Python scripts are not obligatory, because Stan can interact many high level data analysis programming languages (R, Python, shell, MATLAB, Julia, Stata) . Some tutorials about Stan Bayesian statistics and model selection can be found here https://mc-stan.org/users/documentation/tutorials.
+The package contains a file containing the STAN code [“Kalman_fluorescence.txt”](Kalman_fluorescence.txt) as well as the python script [“compile_CCCCO_normal_split.py”](compile_CCCCO_normal_split.py) to compile the code. Finally, a Python script [“sample_PC_data.py”](sample_cPCF_KF.py) which acts as the interface between the data and the sampler. To adapt the code to your data, basic Stan programming skills are required. The Python knowledge and the Python scripts are not obligatory, because Stan can interact many high level data analysis programming languages (R, Python, shell, MATLAB, Julia, Stata) . Some tutorials about Stan Bayesian statistics and model selection can be found here https://mc-stan.org/users/documentation/tutorials or here
+https://ourcodingclub.github.io/tutorials/stan-intro/. Also youtube has many good starting tutorials.
 
 The topology of the kinetic scheme is uniquely defined by a rate matrix. Our example code demonstrates the analysis with a two ligand-gated 4 state model of confocal patch-clamp fluorometry data. The rate matrix is defined in the function ["create_rate_matrix line 537"](Kalman_fluorescence.txt#L537)  and its sub functions ["multiply_ligandconc_CCCO line 383"](Kalman_fluorescence.txt#L283)  and `assign_param_to_rate_matrix_CCCO` line 308 in the file `Kalman_fluorescence.txt`. 
-The mean observation is defined in ["define_observation_model_CCCO" line 265](Kalman_fluorescence.txt#L265) with the function `define_observation_model_CCCO`  which is called in line 663.
+The mean observation is defined in ["define_observation_model_CCCO line 265"](Kalman_fluorescence.txt#L265) with the function `define_observation_model_CCCO`  which is called in line 663.
 
 ## Step by step:
 
 
 <details>
 <summary><b> How to start the posterior sampling of the example cPC data as test run on a node of cluster. </b></summary>
-1. One needs to install Stan and PyStan.
+1. One needs to install `Stan` and `PyStan`.
 
 2. One executes `compile_CCCCO_normal_split.py` by prompting
 `python3  compile_CCCCO_normal_split.py` into the command line one the computer cluster where the programm is going to be excuted.
 That compiles the Stan code `KF.txt` into an executable program `KF_CCCO.pic`.
 	 
 3. Prompting `python3 sample_cPCF_KF.py 2000` executes a Python program which acts 
-as an interface between the data from ["data/current8000.npy"](data/current8000.np) and 	    
+as an interface between the data from `data/current8000` and 	    
 sampling algorithm `KF_CCCO.pic`. In the folder, data are 4 numpy arrays. The numpy 
-array “current8000.npy” has the data of 10 different ligand concentrations with two
-ligand jumps from zero to the concentration and back to zero. The numpy array  “Time.npy”
+array `current8000.npy` has the data of 10 different ligand concentrations with two
+ligand jumps from zero to the concentration and back to zero. The numpy array  `Time.npy`
 is the time axis of all traces in the  current array. The ligand concentrations are saved 
-in “ligand_conc.txt” and “ligand_conc_decay.txt”. Each row of the ligand matrix defines an 
-array whose entries are element-wise multiplied to the rates in the function 
-“multiply_ligandconc_CCCO”. Ligand-independent rates are multiplied by one and the ligand
-depended rates are multiplied with a ligand concentration. Within the script  
-“sample_PC_data.py” in the functions “data_slices_beg_new” and 	“data_slices_decay_new” 
-the time points of the concentration jumps are defined. Additionally, each time trace 
+in `ligand_conc.txt` and `ligand_conc_decay.txt`. 
+### Paralized over the CPUs of a node
+Additionally, each time trace 
 is cutted that activation or deactivation is treated as an individual time trace on an 
 individual CPU. We assumed that we only needed 5 patches. So two ligand concentrations 
 were measured from one patch. For optimal caluclation efficiency, 10 time traces 
 require 20 CPUs (activation and decay). 40 CPU to apply cross validaton times 4 for 
 4 independent sample chains.
+The function `map_rect` distributes the timetraces data,the parameter samples  and the function
+`wrapped_calculate_likelyhood_less_memo` and distributes the claculation task dedined in `wrapped_calculate_likelyhood_less_memo`
+to all CPUs.
 
 
 </details>
@@ -47,20 +48,28 @@ require 20 CPUs (activation and decay). 40 CPU to apply cross validaton times 4 
 <details>
 <summary><b> The output of the sampler in contrast to the arameters which are actaully sampled. </b></summary>
 4. The output of samples as we used them in the publication.
-4.1 The csv file “rate_matrix_params” saves the samples of the posterior of the rate 
+4.1 The csv file `rate_matrix_params` saves the samples of the posterior of the rate 
 matrix. Simply analysing them means that we marginalized all other parameters out. Note
 that the dwell times are on a scaled log space 	thus one has to multiply them by a 
 scaling factor for the actual log space. 
-4.2 The single-channel current samples are saved in an numpy array “i_single.npy”.
-4.3 The samples of the variance parameter are saved in the numpy array 	file “measurement_sigma.npy”.
-4.4 The samples of the open-channel variance parameter are saved in the numpy array file “open_variance.npy”.
-4.5 The samples of the “Ion channels per time trace parameter” are saved in the numpy array file “N_traces.npy”.
+4.2 The single-channel current samples are saved in an numpy array `i_single.npy`.
+4.3 The samples of the variance parameter are saved in the numpy array 	file `measurement_sigma.npy`.
+4.4 The samples of the open-channel variance parameter are saved in the numpy array file `open_variance.npy`.
+4.5 The samples of the “Ion channels per time trace parameter” are saved in the numpy array file `N_traces.npy`.
 
 
 </details>
 
 <details>
 <summary><b> How to start the posterior sampling of the example PC data as test run on a node of cluster. </b></summary>
+Each row of the ligand matrix defines an 
+array whose entries are element-wise multiplied to the rates in the function 
+`multiply_ligandconc_CCCO`. Ligand-independent rates are multiplied by one and the ligand
+depended rates are multiplied with a ligand concentration. Within the script  
+“sample_PC_data.py” in the functions “data_slices_beg_new” and 	“data_slices_decay_new” 
+the time points of the concentration jumps are defined
+	
+	
 5. To adapt the kinetic scheme one needs to change a few things within KF.txt  which are 
 the observation model matrix H and the functions related to the kinetic scheme. Then 
 “KF.txt” needs to be recompiled:
