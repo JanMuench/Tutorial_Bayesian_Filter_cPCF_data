@@ -1,11 +1,18 @@
+# Tutorial for Patch-clamp data analysis
+## General Info
+
+
 This tutorial is an example code for confocal patch-clamp fluorometry measurements which is part of the publication “Bayesian inference of kinetic schemes for ion channels by Kalman filtering”. The work was done in Stan https://mc-stan.org/ with the PyStan https://pystan.readthedocs.io/en/latest/ interface version 2.19.1.2 which is currently outdated. We plan to update the tutorial folder to PyStan 3 in the near future. The code is parallelized for the multiple CPUs of a node on a computation cluster. Each individual sampling chain is trivially calculated in parallel provided by the Stan language.
 
 The package contains a file containing the STAN code “Kalman_fluorescence.txt” as well as the python script “compile_CCCCO_normal_split.py” to compile the code. Finally, a Python script “sample_PC_data.py” which acts as the interface between the data and the sampler. To adapt the code to your data, basic Stan programming skills are required. The Python knowledge and the Python scripts are not obligatory, because Stan can interact many high level data analysis programming languages (R, Python, shell, MATLAB, Julia, Stata) .
 
 The topology of the kinetic scheme is uniquely defined by a rate matrix. Our example code demonstrates the analysis with a two ligand-gated 4 state model of confocal patch-clamp fluorometry data. The rate matrix is defined in the function "create_rate_matrix" line 537 and its sub functions "multiply_ligandconc_CCCO" line 383 and "assign_param_to_rate_matrix_CCCO" line 308 in the file “Kalman_fluorescence.txt”. The mean observation is defined in line 265 with the function “define_observation_model_CCCO” which is called in line 663.
 
-Step by step:
+## Step by step:
 
+
+<details>
+<summary><b> How to start the posterior sampling of the example cPC data as test run on a node of cluster. </b></summary>
 1. One needs to install Stan and PyStan.
 
 2. One executes “compile_CCCCO_normal_split.py” by prompting
@@ -30,6 +37,19 @@ were measured from one patch. For optimal caluclation efficiency, 10 time traces
 require 20 CPUs (activation and decay). 40 CPU to apply cross validaton times 4 for 
 4 independent sample chains.
 
+
+</details>
+
+<details>
+<summary><b> How to start the posterior sampling of the example PC data as test run on a node of cluster. </b></summary>
+
+
+
+</details>
+
+
+<details>
+<summary><b> How to start the posterior sampling of the example PC data as test run on a node of cluster. </b></summary>
 4. The output of samples as we used them in the publication.
 4.1 The csv file “rate_matrix_params” saves the samples of the posterior of the rate 
 matrix. Simply analysing them means that we marginalized all other parameters out. Note
@@ -40,6 +60,11 @@ scaling factor for the actual log space.
 4.4 The samples of the open-channel variance parameter are saved in the numpy array file “open_variance.npy”.
 4.5 The samples of the “Ion channels per time trace parameter” are saved in the numpy array file “N_traces.npy”.
 
+
+</details>
+
+<details>
+<summary><b> How to start the posterior sampling of the example PC data as test run on a node of cluster. </b></summary>
 5. To adapt the kinetic scheme one needs to change a few things within KF.txt  which are 
 the observation model matrix H and the functions related to the kinetic scheme. Then 
 “KF.txt” needs to be recompiled:
@@ -48,6 +73,7 @@ represents the matrix H of the 	article which generates the mean signal for a gi
 ensemble state. If more than  two conducting classes (non-conducting and conducting) are
 modeled, additional single-channel current parameters need to be defined in the parameters block.
 
+	
 5.2 The function “multiply_ligandconc_CCCO” needs to be adapted. That function takes the parameters from
 the parameters block and computes the rates of the rate matrix. They are then passed to the 
 “assign_param_to_rate_matrix_CCCO” function. Note that this example code has four dwell times as parameters and two 
@@ -61,7 +87,10 @@ parametrization to begin with. We argue in the paper to use this parametrisation
 Jeffreys prior but there a couple of other options.
 5.4 The mean observation needs to be changed in line 806
 5.5 If the amount of open-channel states with differing open-channel noise variances for each state needs to be calculated,
-the function “calc_sigma_and_mean” must be adapted
+the function “calc_sigma_and_mean” must be adapted	
+
+</details>
+
 
 Although we recommend to have the dwell times (diagonal elements of the rate matrix) as parameters, we recalculate them which is reminiscent of former parameterizations.
 
