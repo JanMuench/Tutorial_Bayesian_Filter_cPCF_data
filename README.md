@@ -40,16 +40,11 @@ require 20 CPUs (activation and decay). 40 CPU to apply cross validaton times 4 
 
 </details>
 
-<details>
-<summary><b> How to start the posterior sampling of the example PC data as test run on a node of cluster. </b></summary>
 
-
-
-</details>
 
 
 <details>
-<summary><b> How to start the posterior sampling of the example PC data as test run on a node of cluster. </b></summary>
+<summary><b> The output of the sampler in contrast to the arameters which are actaully sampled. </b></summary>
 4. The output of samples as we used them in the publication.
 4.1 The csv file “rate_matrix_params” saves the samples of the posterior of the rate 
 matrix. Simply analysing them means that we marginalized all other parameters out. Note
@@ -91,7 +86,7 @@ the function “calc_sigma_and_mean” must be adapted
 
 </details>
 
-
+## Some other comments 
 Although we recommend to have the dwell times (diagonal elements of the rate matrix) as parameters, we recalculate them which is reminiscent of former parameterizations.
 
 Note, that PyStan 3 is not downward compatible. Thus, using PyStan 3 requires some minor changes to the compiling sampling and saving of the samples. To visualize and analyze a posterior/draw from the posterior, we recommend the package Corner.py. To implement a posterior post processing and diagnosis in a Bayesian workflow, we highly recommend using the Arviz package.
