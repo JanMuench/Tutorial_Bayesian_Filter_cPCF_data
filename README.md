@@ -1,4 +1,4 @@
-# Tutorial for Patch-clamp data analysis
+# Tutorial for confocal Patch-clamp fluorometry data analysis
 ## General Info
 
 
